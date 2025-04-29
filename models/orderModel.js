@@ -30,12 +30,23 @@ const Order = {
     }
   },  
 
-  async findByUserId(userId) {
-    const [orders] = await db.execute(
-      'SELECT * FROM orders WHERE client_id = ?',
-      [userId]
-    );
-
+  async findByUserId(userId, role) {
+    let orders;
+    if (role === 'client') {
+      [orders] = await db.execute(
+        'SELECT * FROM orders WHERE client_id = ?',
+        [userId]
+      );
+    } else if (role === 'livreur') {
+      [orders] = await db.execute(
+        `SELECT * FROM orders
+         WHERE delivery_person_id = ? OR delivery_person_id IS NULL`,
+        [userId]
+      );
+    } else {
+      return [];
+    }
+  
     for (const order of orders) {
       const [items] = await db.execute(
         'SELECT menu_item_id, quantity, item_status FROM order_items WHERE order_id = ?',
@@ -43,9 +54,9 @@ const Order = {
       );
       order.items = items;
     }
-
+  
     return orders;
-  },
+  },  
 
   async findById(orderId) {
     const [orderRows] = await db.execute(

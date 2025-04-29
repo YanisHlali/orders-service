@@ -13,9 +13,10 @@ const orderController = {
   },  
 
   async getUserOrders(req, res) {
-    const { userId } = req.params;
+    // Récupérer role de l'utilisateur à partir du token JWT
+    const user = req.user;
     try {
-      const orders = await Order.findByUserId(userId);
+      const orders = await Order.findByUserId(user.id, user.role);
       res.status(200).json(orders);
     } catch (error) {
       console.error(error);
@@ -47,7 +48,7 @@ const orderController = {
       res.status(500).json({ message: 'Server error' });
     }
   },
-    
+
   async closeOrder(req, res) {
     try {
       await Order.closeOrder(req.params.id);
