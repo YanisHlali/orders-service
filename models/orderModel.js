@@ -37,12 +37,29 @@ const Order = {
   },
 
   async findById(orderId) {
-    const [rows] = await db.execute(
+    const [orderRows] = await db.execute(
       'SELECT * FROM orders WHERE id = ?',
       [orderId]
     );
-    return rows[0];
-  },
+    const order = orderRows[0];
+    if (!order) return null;
+  
+    const [items] = await db.execute(
+      'SELECT menu_item_id, quantity, item_status FROM order_items WHERE order_id = ?',
+      [orderId]
+    );
+  
+    order.items = items;
+    return order;
+  },  
+
+  async getOrderItems(orderId) {
+    const [rows] = await db.execute(
+      'SELECT menu_item_id, quantity, item_status FROM order_items WHERE order_id = ?',
+      [orderId]
+    );
+    return rows;
+  },  
 
   async updateStatus(orderId, status) {
     const [result] = await db.execute(
