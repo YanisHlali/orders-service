@@ -8,6 +8,6 @@ router.get('/orders/:id', authenticateToken, orderController.getOrderById);
 router.post('/orders', authenticateToken, orderController.createOrder);
 router.post('/orders/close/:id', authenticateToken, orderController.closeOrder);
 router.put('/orders/:orderId/status', authenticateToken, orderController.updateOrderStatus);
-router.delete('/orders/:id', authenticateToken, orderController.deleteOrder);
+router.delete('/orders/delete/:id', authenticateToken, orderController.deleteOrder);
 
 module.exports = router;

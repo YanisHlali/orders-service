@@ -29,11 +29,20 @@ const Order = {
   },
 
   async findByUserId(userId) {
-    const [rows] = await db.execute(
+    const [orders] = await db.execute(
       'SELECT * FROM orders WHERE client_id = ?',
       [userId]
     );
-    return rows;
+
+    for (const order of orders) {
+      const [items] = await db.execute(
+        'SELECT menu_item_id, quantity, item_status FROM order_items WHERE order_id = ?',
+        [order.id]
+      );
+      order.items = items;
+    }
+
+    return orders;
   },
 
   async findById(orderId) {
@@ -43,15 +52,16 @@ const Order = {
     );
     const order = orderRows[0];
     if (!order) return null;
-  
+
     const [items] = await db.execute(
       'SELECT menu_item_id, quantity, item_status FROM order_items WHERE order_id = ?',
       [orderId]
     );
-  
+
     order.items = items;
+    console.log(order);
     return order;
-  },  
+  },
 
   async getOrderItems(orderId) {
     const [rows] = await db.execute(
@@ -59,7 +69,7 @@ const Order = {
       [orderId]
     );
     return rows;
-  },  
+  },
 
   async updateStatus(orderId, status) {
     const [result] = await db.execute(
