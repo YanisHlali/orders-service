@@ -1,0 +1,70 @@
+const db = require('../config/db');
+
+const Order = {
+  async create(clientId, items) {
+    const conn = await db.getConnection();
+    try {
+      await conn.beginTransaction();
+      const [result] = await conn.execute(
+        'INSERT INTO orders (client_id) VALUES (?)',
+        [clientId]
+      );
+      const orderId = result.insertId;
+
+      for (const item of items) {
+        await conn.execute(
+          'INSERT INTO order_items (order_id, menu_item_id, quantity) VALUES (?, ?, ?)',
+          [orderId, item.menu_item_id, item.quantity]
+        );
+      }
+
+      await conn.commit();
+      return orderId;
+    } catch (error) {
+      await conn.rollback();
+      throw error;
+    } finally {
+      conn.release();
+    }
+  },
+
+  async findByUserId(userId) {
+    const [rows] = await db.execute(
+      'SELECT * FROM orders WHERE client_id = ?',
+      [userId]
+    );
+    return rows;
+  },
+
+  async findById(orderId) {
+    const [rows] = await db.execute(
+      'SELECT * FROM orders WHERE id = ?',
+      [orderId]
+    );
+    return rows[0];
+  },
+
+  async updateStatus(orderId, status) {
+    const [result] = await db.execute(
+      'UPDATE orders SET order_status = ? WHERE id = ?',
+      [status, orderId]
+    );
+    return result;
+  },
+
+  async closeOrder(orderId) {
+    const [result] = await db.execute(
+      'UPDATE orders SET order_status = "livre", updated_at = NOW() WHERE id = ?',
+      [orderId]
+    );
+    return result;
+  },
+
+  async delete(orderId) {
+    await db.execute('DELETE FROM order_items WHERE order_id = ?', [orderId]);
+    const [result] = await db.execute('DELETE FROM orders WHERE id = ?', [orderId]);
+    return result;
+  }
+};
+
+module.exports = Order;
