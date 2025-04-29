@@ -1,23 +1,25 @@
 const db = require('../config/db');
 
 const Order = {
-  async create(clientId, items) {
+  async create(clientId, items, deliveryPersonId = null, pickupTime = null, deliveryTime = null) {
     const conn = await db.getConnection();
     try {
       await conn.beginTransaction();
+  
       const [result] = await conn.execute(
-        'INSERT INTO orders (client_id) VALUES (?)',
-        [clientId]
+        `INSERT INTO orders (client_id, delivery_person_id, pickup_time, delivery_time)
+         VALUES (?, ?, ?, ?)`,
+        [clientId, deliveryPersonId, pickupTime, deliveryTime]
       );
       const orderId = result.insertId;
-
+  
       for (const item of items) {
         await conn.execute(
           'INSERT INTO order_items (order_id, menu_item_id, quantity) VALUES (?, ?, ?)',
           [orderId, item.menu_item_id, item.quantity]
         );
       }
-
+  
       await conn.commit();
       return orderId;
     } catch (error) {
@@ -26,7 +28,7 @@ const Order = {
     } finally {
       conn.release();
     }
-  },
+  },  
 
   async findByUserId(userId) {
     const [orders] = await db.execute(
@@ -71,11 +73,24 @@ const Order = {
     return rows;
   },
 
-  async updateStatus(orderId, status) {
-    const [result] = await db.execute(
-      'UPDATE orders SET order_status = ? WHERE id = ?',
-      [status, orderId]
-    );
+  async updateStatus(orderId, status, deliveryPersonId = null) {
+    let query = 'UPDATE orders SET order_status = ?, updated_at = NOW()';
+    const params = [status];
+  
+    if (status === 'en_livraison' && deliveryPersonId) {
+      query += ', delivery_person_id = ?';
+      query += ', pickup_time = NOW()';
+      params.push(deliveryPersonId);
+    } 
+  
+    if (status === 'livre') {
+      query += ', delivery_time = NOW()';
+    }
+  
+    query += ' WHERE id = ?';
+    params.push(orderId);
+  
+    const [result] = await db.execute(query, params);
     return result;
   },
 

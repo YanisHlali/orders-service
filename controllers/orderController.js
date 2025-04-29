@@ -2,15 +2,15 @@ const Order = require('../models/orderModel');
 
 const orderController = {
   async createOrder(req, res) {
-    const { clientId, items } = req.body;
+    const { clientId, items, deliveryPersonId, pickupTime, deliveryTime } = req.body;
     try {
-      const id = await Order.create(clientId, items);
+      const id = await Order.create(clientId, items, deliveryPersonId, pickupTime, deliveryTime);
       res.status(201).json({ message: 'Order created', id });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Server error' });
     }
-  },
+  },  
 
   async getUserOrders(req, res) {
     const { userId } = req.params;
@@ -37,15 +37,17 @@ const orderController = {
   },  
 
   async updateOrderStatus(req, res) {
+    const { status, delivery_person_id } = req.body;
+  
     try {
-      await Order.updateStatus(req.params.orderId, req.body.status);
+      await Order.updateStatus(req.params.orderId, status, delivery_person_id);
       res.status(200).json({ message: 'Order status updated' });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Server error' });
     }
   },
-
+    
   async closeOrder(req, res) {
     try {
       await Order.closeOrder(req.params.id);
