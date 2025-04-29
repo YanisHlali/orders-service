@@ -49,16 +49,6 @@ const orderController = {
     }
   },
 
-  async closeOrder(req, res) {
-    try {
-      await Order.closeOrder(req.params.id);
-      res.status(200).json({ message: 'Order closed' });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Server error' });
-    }
-  },
-
   async deleteOrder(req, res) {
     try {
       await Order.delete(req.params.id);

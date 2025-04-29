@@ -105,14 +105,6 @@ const Order = {
     return result;
   },
 
-  async closeOrder(orderId) {
-    const [result] = await db.execute(
-      'UPDATE orders SET order_status = "livre", updated_at = NOW() WHERE id = ?',
-      [orderId]
-    );
-    return result;
-  },
-
   async delete(orderId) {
     await db.execute('DELETE FROM order_items WHERE order_id = ?', [orderId]);
     const [result] = await db.execute('DELETE FROM orders WHERE id = ?', [orderId]);
