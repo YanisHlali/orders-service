@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const orderRoutes = require('./routes/orderRoutes');
 const cors = require('cors');
-require('dotenv').config({ path: '.env.local' });
+require('dotenv').config();
 
 const app = express();
 app.use(cors());
